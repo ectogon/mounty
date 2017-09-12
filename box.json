@@ -5,6 +5,6 @@
         "vendor"
     ],
     "main": "bin/cmi-sshfs",
-    "output": "c-sshfs.phar",
+    "output": "mounty.phar",
     "stub": true
 }
