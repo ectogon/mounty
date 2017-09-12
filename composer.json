@@ -1,0 +1,19 @@
+{
+    "name": "ectogon/mount-sshfs",
+    "require": {
+        "monolog/monolog": "1.0.*",
+        "nategood/commando": "*",
+        "symfony/yaml": "*"
+    },
+    "authors": [
+        {
+            "name": "CafeMedia Dev Team",
+            "email": "techteam@cafemom.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "CafeMedia\\Operations\\SshFs\\": "src/"
+        }
+    }
+}

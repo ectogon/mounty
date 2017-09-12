@@ -1,0 +1,10 @@
+{
+    "chmod": "0755",
+    "directories": [
+        "src",
+        "vendor"
+    ],
+    "main": "bin/cmi-sshfs",
+    "output": "c-sshfs.phar",
+    "stub": true
+}

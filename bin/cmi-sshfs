@@ -1,0 +1,118 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Mount, unmount of remount volumes via sshfs/FUSE
+ * @todo support profiles
+ * @todo better configuration handling
+ * @todo OSX support
+ */
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+use CafeMedia\Operations\SshFs\MountPoint;
+use CafeMedia\Operations\SshFs\MountConfig as Config;
+use Commando\Command;
+
+$defaultConfigFile = getenv("HOME")."/.config/cmi/dev-mounts.json";
+
+$cmd = new Command();
+$cmd->argument()
+//    ->aka('action')
+    ->title('action')
+    ->describe('"start", "stop", "reload" or "create". Attach or detach mount point/s')
+    ->must(function($action) {
+        $options = ['start', 'stop', 'status'];
+        return in_array($action, $options);
+    });
+
+// Configuration file/s
+// @todo Load all configurations in a directory if path doesn't point to a specific file
+// eg.   ->describe('Load list of mount points to manage. default: /etc/cmi/dev-mounts/*.json')
+$cmd->option('c')
+    ->title('config')
+    ->describe('Load list of mount points to manage. default: /etc/cmi/dev-mounts.json')
+    ->expectsFile();
+
+$cmd->flag('l')
+    ->title('list')
+    ->describe('List stored mounts from config')
+    ->boolean();
+
+$cmd->option('n')
+    ->title('name')
+    ->describe('Mount or unmount a specific volume');
+
+$cmd->option('a')
+    ->title('add')
+    ->describe('Create and add a mount point');
+
+$cmd->option('p')
+    ->title('profile')
+    ->describe('Mount a specific set of volumes. Not implemented yet.');
+
+
+//echo print_r($cmd['l'],1);
+$action = $cmd[0];
+
+$config = new Config($defaultConfigFile);
+$mounts = [];
+foreach($config->get()->hosts as $mountConfig) {
+    $mount = new MountPoint($mountConfig);
+
+    //($action == 'start') ? $mount->mount() : $mount->unMount();
+    //$mount->mount();
+    //$mount->unMount();
+    $mounts[$mount->id] = $mount;
+}
+
+// Look for named mount within MountPoints
+// @todo accept multiple named mounts
+//echo print_r($mounts,1);
+if($cmd['n']) {
+    if(array_key_exists($cmd['n'], $mounts)) {
+        $mounts = [$mounts[$cmd['n']]];
+    }
+}
+
+// Actions and output
+switch ($action) {
+    case 'start':
+        foreach($mounts as $key => $mount) {
+            $mount->mount();
+        }
+        break;
+
+    case 'stop':
+        foreach($mounts as $key => $mount) {
+            $mount->unMount();
+        }
+        break;
+
+    case 'status':
+        $mountStatus = ['mounted', 'not-mounted'];
+        foreach($mounts as $key => $mount) {
+            //echo print_r($mount->status(),1);
+            ($mount->isMounted) ? $mountStatus['mounted'][] = $mount : $mountStatus['not-mounted'][] = $mount;
+            //echo $mount->status;
+        }
+        foreach (["mounted", "not-mounted"] as $status) {
+            if(!empty($mountStatus[$status])) {
+                echo ucfirst($status)."\n";
+                foreach($mountStatus[$status] as $mount) {
+                    echo "- ".$mount->getLocalPath()."\n";
+                }
+                echo "\n";
+            }
+        }
+        break;
+}
+
+
+// @only list mounts if no action is performed
+if($cmd['l']) {
+    echo print_r(json_encode(
+        ["hosts" => array_values($mounts)],
+        JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
+    ),1);
+}

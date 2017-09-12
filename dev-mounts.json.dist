@@ -1,0 +1,13 @@
+{
+    "hosts": [
+        {
+            "id": "id-for-command-line-use",
+            "name": "Display Name for Output",
+            "user": "username",
+            "identity_file": "/path/to/key",
+            "hostname": "example.com",
+            "remote-path": "/path/to/remote/files",
+            "mount-point": "/home/username/mount-point"
+        }
+    ]
+}
